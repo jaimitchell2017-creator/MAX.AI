@@ -1,449 +1,56 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Max AI</title>
-  <meta name="application-name" content="Max AI" />
-  <style>
-    *{box-sizing:border-box}
-    body{margin:0;color:#292635;background:#fff;font:15px system-ui,sans-serif}
-    button,input,textarea{font:inherit}
-    button{cursor:pointer;border:0;border-radius:999px;padding:9px 12px;background:#f0edfa;color:#594281}
-    button:disabled{opacity:.5;cursor:wait}
-    #app{height:100dvh;max-width:920px;margin:auto;display:flex;flex-direction:column}
-    header{display:flex;justify-content:space-between;align-items:center;height:64px;padding:8px 16px;border-bottom:1px solid #eee}
-    .brand{display:flex;align-items:center;font-weight:650;gap:8px}
-    .brand svg{width:40px;height:38px}
-    main{flex:1;overflow:auto;padding:20px}
-    #welcome{max-width:420px;text-align:center;margin:7vh auto 20px}
-    #welcome svg{width:150px;height:140px}
-    h1{font-size:22px;margin:12px 0 4px}
-    .muted{font-size:12px;color:#787080;line-height:1.6}
-    .suggest{display:block;width:100%;margin:10px 0;padding:14px;text-align:left;background:#f6f6f9;border-radius:16px}
-    .message{white-space:pre-wrap;overflow-wrap:anywhere;padding:13px 16px;line-height:1.65;background:#f5f5f8;border-radius:18px;width:fit-content;max-width:88%;margin:10px 0}
-    .user{margin-left:auto;background:#ecf1ff}
-    footer{padding:10px 14px max(14px,env(safe-area-inset-bottom))}
-    .activity{display:flex;align-items:center;gap:9px;padding:8px 4px;min-height:42px}
-    .activity svg{width:30px;height:28px;flex-shrink:0}
-    #activityText{font-size:12px;color:#746b80;line-height:1.4}
-    body.working .activity svg .m-mark{animation:mspin 1s infinite linear}
-    @keyframes mspin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-    .composer{display:flex;align-items:center;gap:3px;padding:5px;background:#f4f5f8;border-radius:28px}
-    .icon-btn{background:none;padding:8px;min-width:34px;font-size:20px;border-radius:50%}
-    .icon-btn:hover{background:#e9e7f7}
-    #input{flex:1;min-width:0;height:44px;resize:none;background:transparent;border:0;padding:10px;outline:none}
-    #send{background:#168bff;color:white;border-radius:50%;min-width:36px}
-    #stop{background:#fbe7ef;color:#ad2858;font-size:13px}
-    #shade{position:fixed;inset:0;background:#0005;z-index:10}
-    aside{position:fixed;inset:0 auto 0 0;width:min(360px,94vw);padding:20px;overflow:auto;background:white;z-index:11;border-right:1px solid #eee}
-    aside h2{margin-top:0}
-    .card{border:1px solid #e5e1ed;padding:13px;border-radius:16px;margin:10px 0}
-    .card h3{margin:0 0 6px;font-size:15px}
-    .small{font-size:11px;color:#8a8394;line-height:1.6}
-    #files{margin-top:6px}
-    .field{border:1px solid #ddd;border-radius:10px;padding:8px 10px;width:100%;margin:4px 0;font-size:13px}
-    #toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);padding:8px 13px;border-radius:12px;background:#29263a;color:#fff;font-size:11px;max-width:90%;white-space:pre-wrap;z-index:20}
-    #toast[hidden]{display:none}
-    dialog{border:0;border-radius:18px;padding:16px;max-width:620px;width:95%}
-    dialog::backdrop{background:#0006}
-    #editor{width:100%;min-height:210px;resize:vertical;font-family:monospace}
-  </style>
-</head>
-<body>
-<div id="app">
-  <header>
-    <button id="menu" class="icon-btn" aria-label="Open menu">☰</button>
-    <div class="brand">
-      <!-- Max AI logo -->
-      <svg viewBox="0 0 220 200" role="img" aria-label="Max AI logo">
-        <defs>
-          <linearGradient id="maxg">
-            <stop stop-color="#a855f7"/><stop offset="1" stop-color="#267aff"/>
-          </linearGradient>
-        </defs>
-        <g class="m-mark">
-          <path d="M48 115V66Q48 44 65 60L110 105L155 60Q172 44 172 66V115"
-                fill="none" stroke="url(#maxg)" stroke-width="18"
-                stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M110 22L115 35L128 40L115 45L110 58L105 45L92 40L105 35Z"
-                fill="#9955ee"/>
-        </g>
-      </svg>
-      <span>Max AI</span>
-    </div>
-    <button id="new" class="icon-btn" aria-label="New chat">＋</button>
-  </header>
-
-  <main id="chat">
-    <section id="welcome">
-      <svg viewBox="0 0 220 200" role="img" aria-label="Max AI logo">
-        <defs>
-          <linearGradient id="maxg2">
-            <stop stop-color="#a855f7"/><stop offset="1" stop-color="#267aff"/>
-          </linearGradient>
-        </defs>
-        <g class="m-mark">
-          <path d="M48 115V66Q48 44 65 60L110 105L155 60Q172 44 172 66V115"
-                fill="none" stroke="url(#maxg2)" stroke-width="18"
-                stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M110 22L115 35L128 40L115 45L110 58L105 45L92 40L105 35Z"
-                fill="#9955ee"/>
-        </g>
-      </svg>
-      <h1>Meet MAX 0.4 Astra</h1>
-      <p class="muted">
-        Local AI, using your self‑trained Max_AI_0.4_Astra-Q4_K_M.gguf through llama‑server.
-      </p>
-      <button class="suggest" data-text="Explain photosynthesis in three simple sentences.">
-        ✧ &nbsp; Explain something simply
-      </button>
-      <button class="suggest" data-text="Make a short photosynthesis quiz with an answer key.">
-        ✧ &nbsp; Make a study quiz
-      </button>
-      <button class="suggest" data-text="Help me plan a simple website.">
-        ✧ &nbsp; Help me create a website
-      </button>
-    </section>
-    <div id="messages" aria-live="polite"></div>
-  </main>
-
-  <footer>
-    <div class="activity" role="status">
-      <svg viewBox="0 0 220 200" role="img" aria-label="Max AI logo">
-        <defs>
-          <linearGradient id="maxg3">
-            <stop stop-color="#a855f7"/><stop offset="1" stop-color="#267aff"/>
-          </linearGradient>
-        </defs>
-        <g class="m-mark">
-          <path d="M48 115V66Q48 44 65 60L110 105L155 60Q172 44 172 66V115"
-                fill="none" stroke="url(#maxg3)" stroke-width="18"
-                stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M110 22L115 35L128 40L115 45L110 58L105 45L92 40L105 35Z"
-                fill="#9955ee"/>
-        </g>
-      </svg>
-      <span id="activityText">Interface ready · No server set yet.</span>
-    </div>
-
-    <div class="composer">
-      <button id="upload" class="icon-btn" aria-label="Upload text">＋</button>
-      <textarea id="input" aria-label="Message" placeholder="Message Max AI…"></textarea>
-      <button id="mic" class="icon-btn" aria-label="Voice to text">🎙</button>
-      <button id="voice" class="icon-btn" aria-label="Voice conversation">☎</button>
-      <button id="stop" class="icon-btn" hidden>■</button>
-      <button id="send" class="icon-btn" aria-label="Send">➤</button>
-    </div>
-  </footer>
-</div>
-
-<div id="shade" hidden></div>
-
-<aside id="sidebar" hidden>
-  <button id="close" class="icon-btn" style="float:right">×</button>
-  <h2>Max AI</h2>
-
-  <div class="card">
-    <h3>Local Astra 0.4 server</h3>
-    <p class="small">
-      This website sends chat messages to your own llama‑server running
-      <code>Max_AI_0.4_Astra-Q4_K_M.gguf</code>. Nothing is sent to a cloud AI.[web:54][web:60]
-    </p>
-    <label class="small">
-      Server URL (e.g. <code>http://localhost:10000</code>):
-      <input id="serverUrl" class="field" type="url"
-             placeholder="http://localhost:10000" />
-    </label>
-    <button id="saveServer">Save server</button>
-    <p class="small" id="serverState">No server saved.</p>
-  </div>
-
-  <div class="card">
-    <h3>Files</h3>
-    <p class="small">Workspace files are local to this device and tab.</p>
-    <button id="create">New file</button>
-    <button id="upload2">Upload text file</button>
-    <div id="files"></div>
-  </div>
-
-  <div class="card">
-    <h3>Logo</h3>
-    <p class="small">Download the Max AI logo as SVG.</p>
-    <button id="logoDownload">Download logo SVG</button>
-  </div>
-</aside>
-
-<dialog id="fileDialog">
-  <h3 id="fileTitle">Edit file</h3>
-  <textarea id="editor"></textarea>
-  <div style="margin-top:10px">
-    <button id="saveFile">Save (workspace)</button>
-    <button id="cancelFile">Cancel</button>
-  </div>
-</dialog>
-
-<input id="fileInput" type="file" accept=".txt,.md,.html,.css,.js,.json,.csv" hidden />
-
-<div id="toast" hidden></div>
-
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Max AI — Astra model library</title><meta name="application-name" content="Max AI"><style>
+*{box-sizing:border-box}body{margin:0;color:#292635;background:#fff;font:15px system-ui,sans-serif}button,input,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:10px 13px;background:#f0edfa;color:#594281}button:disabled{opacity:.5;cursor:wait}#app{height:100dvh;max-width:920px;margin:auto;display:flex;flex-direction:column}header{display:flex;justify-content:space-between;align-items:center;height:68px;padding:8px 16px;border-bottom:1px solid #eee}.brand{display:flex;align-items:center;font-weight:650}.brand svg{width:48px;height:46px}.brand svg text{display:none}main{flex:1;overflow:auto;padding:20px}#welcome{max-width:420px;text-align:center;margin:7vh auto 20px}#welcome svg{width:155px}h1{font-size:23px}.muted{font-size:12px;color:#787080;line-height:1.6}.suggest{display:block;width:100%;margin:10px 0;padding:16px;text-align:left;background:#f6f6f9}.message{white-space:pre-wrap;overflow-wrap:anywhere;padding:14px 17px;line-height:1.65;background:#f5f5f8;border-radius:18px;width:fit-content;max-width:88%;margin:12px 0}.user{margin-left:auto;background:#ecf1ff}footer{padding:12px 14px max(14px,env(safe-area-inset-bottom))}.composer{display:flex;align-items:center;gap:3px;padding:5px;background:#f4f5f8;border-radius:28px}.composer button{background:none;padding:10px;min-width:35px;font-size:20px}#input{flex:1;min-width:0;height:44px;resize:none;background:transparent;border:0;padding:10px;outline:none}#send{background:#168bff;color:white;border-radius:50%}#stop{background:#fbe7ef;color:#ad2858;font-size:13px}.activity{display:flex;align-items:center;gap:9px;padding:9px 4px;min-height:43px}.activity svg{width:34px;height:34px;flex-shrink:0}.activity svg text{display:none}#activityText{font-size:12px;color:#746b80;line-height:1.4}#shade{position:fixed;inset:0;background:#0005;z-index:10}aside{position:fixed;inset:0 auto 0 0;width:min(370px,94vw);padding:22px;overflow:auto;background:white;z-index:11}.card{border:1px solid #e5e1ed;padding:14px;border-radius:14px;margin:12px 0}.card button{margin:4px 4px 0 0}a{color:#7650be}#toast{position:fixed;bottom:140px;left:50%;transform:translateX(-50%);background:#2b2336;color:white;padding:13px 18px;border-radius:13px;max-width:90%;z-index:30}dialog{width:min(720px,95vw);border:1px solid #ddd;border-radius:15px}#editor{display:block;width:100%;height:50vh;background:white;border:1px solid #ddd;font:13px monospace;margin:12px 0}#eventLog{font-size:11px;white-space:pre-wrap;line-height:1.7;max-height:180px;overflow:auto}.working .m-mark{transform-box:fill-box;transform-origin:center;animation:thinking 1.35s ease-in-out infinite}.working .m-mark path:first-child{stroke-dasharray:300;animation:flow 2.5s linear infinite}@keyframes thinking{0%,100%{transform:scale(.94) rotate(-3deg);opacity:.7}50%{transform:scale(1.06) rotate(3deg);opacity:1}}@keyframes flow{to{stroke-dashoffset:-600}}@media(prefers-reduced-motion:reduce){.working .m-mark,.working .m-mark path:first-child{animation:none!important}}[hidden]{display:none!important}.active{background:#f9deeb!important}button:focus-visible{outline:3px solid #bcadf0;outline-offset:2px}
+</style></head><body><div id="app"><header><button id="menu" aria-label="Open menu">☰</button><div class="brand"><span class="logo"></span>Max AI</div><button id="new" aria-label="New chat">＋</button></header><main id="chat"><section id="welcome"><div class="logo"></div><h1>Meet Max v0.3 Astra</h1><p class="muted">Choose your Astra. One local model at a time.</p><button class="suggest" data-text="Explain photosynthesis in three sentences.">✧ &nbsp; Explain something simply</button><button class="suggest" data-text="Make a short photosynthesis quiz with an answer key.">✧ &nbsp; Make a study quiz</button><button class="suggest" data-text="Help me plan a simple website.">✧ &nbsp; Help me create a website</button></section><div id="messages" aria-live="polite"></div></main><footer><div class="activity" role="status"><span class="logo"></span><span id="activityText">Starting interface…</span></div><div class="composer"><button id="upload" aria-label="Upload text">＋</button><textarea id="input" aria-label="Message" placeholder="Message Max AI…"></textarea><button id="mic" aria-label="Local voice to text">🎙</button><button id="voice" aria-label="Voice conversation">☎</button><button id="stop" hidden>■ Stop</button><button id="send" aria-label="Send">➤</button></div></footer></div><div id="shade" hidden></div><aside id="sidebar" hidden><button id="close" style="float:right">×</button><h2>Max AI</h2><div class="card"><b>Astra model library</b><p class="muted">Choose a model below. Only one is loaded in memory at a time. First use downloads its assets.</p><label for="modelSelect">Choose model</label><select id="modelSelect" style="width:100%;padding:12px;margin:12px 0;border:1px solid #ddd;border-radius:10px"></select><p id="modelInfo" class="muted"></p><button id="load">Load local model</button><button id="unload">Unload / reset</button><p class="muted" id="modelState">Not loaded.</p></div><div class="card"><b>Qwen/Qwen3-ASR-1.7B</b><p class="muted">Speech model requested. Browser adapter not implemented; not loaded by the chat runtime.</p><button id="qwen">Check status</button><a href="https://huggingface.co/Qwen/Qwen3-ASR-1.7B" target="_blank" rel="noopener">Model page</a></div><h3>Files</h3><button id="create">New file</button><button id="upload2">Upload text</button><div id="files"></div><h3>Logo</h3><button id="logoDownload">Download SVG</button><h3>Recent activity</h3><div id="eventLog"></div><h3>Privacy & limitations</h3><p class="muted">First load downloads software and weights. Prompts are processed locally; no cloud AI fallback. Model and browser compatibility are required. Serve over HTTPS or localhost for best compatibility. Web search is off. Workspace files clear when the page reloads.</p><p class="muted">Voice is restricted to browsers exposing on-device speech recognition. Fully local voice conversation and Qwen ASR are not implemented. Local models are not guaranteed safe; safety instructions are not unbypassable controls.</p><p id="diagnostics" class="muted"></p></aside><input id="fileInput" type="file" accept=".txt,.md,.html,.css,.js,.json,.csv" hidden><dialog id="fileDialog"><h3 id="fileTitle"></h3><textarea id="editor" aria-label="File contents"></textarea><button id="saveFile">Save workspace copy</button><button id="cancelFile">Cancel</button></dialog><div id="toast" role="status" hidden></div>
 <script>
-(function(){
-  const $ = id => document.getElementById(id);
+(function(){'use strict';
+const $=id=>document.getElementById(id),LOGO="<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 220 200\" role=\"img\" aria-label=\"Max AI\"><defs><linearGradient id=\"maxg\"><stop stop-color=\"#a855f7\"/><stop offset=\"1\" stop-color=\"#267aff\"/></linearGradient></defs><g class=\"m-mark\"><path d=\"M48 115V66Q48 44 65 60L110 105L155 60Q172 44 172 66V115\" fill=\"none\" stroke=\"url(#maxg)\" stroke-width=\"18\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M110 22L115 35L128 40L115 45L110 58L105 45L92 40L105 35Z\" fill=\"#9955ee\"/></g><text x=\"110\" y=\"170\" text-anchor=\"middle\" font-family=\"Arial,sans-serif\" font-weight=\"700\" letter-spacing=\"5\" font-size=\"24\" fill=\"#202332\">MAX AI</text></svg>",WORKER_CODE="let engine=null;\nlet running=false;\nself.onmessage=async({data:m})=>{\n if(m.type==='interrupt'){engine?.interruptGenerate();return;}\n try{\n  if(m.type==='load'){\n   let lib;let error;\n   for(const u of ['https://esm.run/@mlc-ai/web-llm@0.2.82','https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.82/+esm']){try{self.postMessage({type:'progress',text:'Loading runtime: '+u});lib=await import(u);break;}catch(e){error=e;}}\n   if(!lib)throw error;\n   if(!lib.prebuiltAppConfig.model_list.some(x=>x.model_id===m.model))throw Error('Selected model is not supported by this pinned runtime: '+m.model+'. Try another model.');\n   engine=new lib.MLCEngine({initProgressCallback:p=>self.postMessage({type:'progress',text:p.text||'Loading model assets\u2026'})});\n   await engine.reload(m.model);\n   self.postMessage({type:'ready'});\n  }\n  if(m.type==='generate'){\n   if(!engine)throw Error('Model is not loaded.');\n   if(running)throw Error('A reply is already being generated.');\n   running=true;\n   const chunks=await engine.chat.completions.create({messages:m.messages,stream:true,max_tokens:384,temperature:0.6});\n   for await(const c of chunks){const text=c.choices?.[0]?.delta?.content||'';if(text)self.postMessage({type:'chunk',id:m.id,text});}\n   self.postMessage({type:'done',id:m.id});\n  }\n }catch(e){self.postMessage({type:'error',id:m.id,text:e.message||String(e)});}finally{if(m.type==='generate')running=false;}\n};";
+const REGISTRY=[{"id": "astra02", "name": "Max v0.2 Astra", "model": "Qwen3-1.7B-q4f32_1-MLC", "kind": "chat", "size": "1.7B"}, {"id": "astra01", "name": "Max v0.1 Astra", "model": "Llama-3.2-1B-Instruct-q4f32_1-MLC", "kind": "chat", "size": "1B"}, {"id": "astra03", "name": "Max v0.3 Astra", "model": "Qwen2.5-0.5B-Instruct-q4f32_1-MLC", "kind": "chat", "size": "0.5B"}];
+let selectedModel=2, disposal=Promise.resolve(),switching=false;
+function currentModel(){return REGISTRY[selectedModel]}
+let worker=null,ready=false,loading=false,job=null,history=[],files=[],editing=-1,phase='Interface ready · Load your local model in ☰',phaseStart=Date.now(),toastTimer,rec=null,listening=false,events=[];
+function log(t){events.push(new Date().toLocaleTimeString()+' — '+t);events=events.slice(-30);$('eventLog').textContent=events.join('\n')}
+function activity(t,busy=false){phase=t;phaseStart=Date.now();document.body.classList.toggle('working',busy);$('activityText').textContent=t;log(t)}
+function toast(t){clearTimeout(toastTimer);$('toast').textContent=t;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,6000)}
+function menu(open){$('sidebar').hidden=!open;$('shade').hidden=!open}
+function controls(){let busy=!!job||loading;$('send').disabled=busy;$('load').disabled=busy||ready||switching;$('modelSelect').disabled=busy||switching;$('new').disabled=busy;$('stop').hidden=!busy;document.body.classList.toggle('working',busy)}
+function terminate(){if(worker)disposal=Promise.resolve(worker.terminate());worker=null;ready=false;loading=false;$('modelState').textContent='Not loaded. Load again to continue.'}
+function endJob(reason,drop=false){if(!job)return;let j=job;job=null;if(j.text){history.push({role:'user',content:j.prompt},{role:'assistant',content:j.text});j.el.textContent=j.text+(reason?'\n\n['+reason+']':'')}else j.el.textContent=reason||'The model returned no text. Try a shorter message or reload the model.';if(drop)terminate();controls();activity(reason||'Reply complete · Local model ready')}
+function stop(){if(loading){terminate();controls();activity('Model loading cancelled.');return}if(job){endJob('Stopped. Model reset; reload to continue.',true)}}
+function fail(text){if(job)endJob(text,true);else{terminate();controls();activity(text);toast(text)}}
+function add(role,text){$('welcome').hidden=true;let e=document.createElement('div');e.className='message '+role;e.textContent=text;$('messages').append(e);$('chat').scrollTop=$('chat').scrollHeight;return e}
 
-  let busy = false;
-  let history = [];
-  let files = [];
-  let editingIndex = -1;
-  let server = "";
+// Same-page adapter for environments blocking module Workers.
+class MaxLocalWorker {
+ constructor(){this.onmessage=null;this.onerror=null;this.closed=false;this.pending=Promise.resolve();const owner=this;
+ this.bridge={postMessage(data){if(!owner.closed)setTimeout(()=>{if(!owner.closed&&owner.onmessage)owner.onmessage({data});},0)}};
+ const cleanup='\nself.interruptRuntime=()=>engine?.interruptGenerate(); self.disposeRuntime=async()=>{if(engine)await engine.unload();};';
+ try{new Function('self',WORKER_CODE+cleanup)(this.bridge)}catch(e){setTimeout(()=>this.onerror?.({message:e.message}),0)}
+ }
+ postMessage(data){if(this.closed)return;this.pending=this.pending.then(()=>{if(!this.closed)return this.bridge.onmessage({data})}).catch(e=>{if(!this.closed)this.onerror?.({message:e.message})})}
+ async terminate(){this.closed=true;this.bridge.interruptRuntime?.();await this.pending;await this.bridge.disposeRuntime?.()}
+}
 
-  // Load saved server URL from localStorage
-  try {
-    server = localStorage.getItem("max_ai_server") || "";
-    if (server) {
-      $("serverUrl").value = server;
-      $("serverState").textContent = "Saved server: " + server;
-      setActivity("Interface ready · Server saved, but not tested yet.", false);
-    } else {
-      setActivity("Interface ready · No server saved.", false);
-    }
-  } catch {
-    setActivity("Interface ready · Cannot access localStorage (server not remembered).", false);
-  }
+function save(name,text,type='text/plain'){let u=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}
+$('menu').onclick=()=>menu(true);$('close').onclick=$('shade').onclick=()=>menu(false);$('stop').onclick=stop;
+$('load').onclick=async()=>{if(loading||job||ready||switching)return;if(!navigator.gpu){toast('WebGPU is unavailable in this browser. Use a compatible browser over HTTPS or localhost.');return}terminate();loading=true;controls();activity('Starting background model runtime…',true);try{await disposal;const url=URL.createObjectURL(new Blob([WORKER_CODE],{type:'text/javascript'}));worker=new MaxLocalWorker(url,{type:'module'});setTimeout(()=>URL.revokeObjectURL(url),30000);worker.onerror=e=>fail('Model worker error: '+(e.message||'Unable to start.'));worker.onmessage=({data:m})=>{if(m.type==='progress'){activity(m.text,true);$('modelState').textContent=m.text}else if(m.type==='ready'){ready=true;loading=false;$('modelState').textContent=currentModel().name+' · '+currentModel().size+' · Loaded locally';controls();activity(currentModel().name+' loaded. Send a message.');toast('Ready for local chat.')}else if(m.type==='chunk'&&job&&m.id===job.id){if(!job.text)log('First response text received.');job.text+=m.text;job.last=Date.now();job.el.textContent=job.text;phase='Receiving reply text locally';phaseStart=job.start;$('chat').scrollTop=$('chat').scrollHeight}else if(m.type==='done'&&job&&m.id===job.id){endJob('')}else if(m.type==='error'){fail('Model error: '+m.text)}};worker.postMessage({type:'load',model:currentModel().model})}catch(e){fail(e.message)}};
+$('unload').onclick=()=>{if(job||loading)stop();terminate();controls();activity('Model unloaded. Cached download assets may remain in the browser.')};
+function send(){let text=$('input').value.trim();if(!text||job||loading)return;if(!ready||!worker){toast('Load the local model from ☰ first.');menu(true);return}if(text.length>3000){toast('Please shorten your message to 3,000 characters for this small local model.');return}if(listening)rec.stop();$('input').value='';add('user',text);const el=add('assistant','Preparing your message locally…');const now=Date.now();job={id:now,prompt:text,el,text:'',start:now,last:now};controls();activity('Request sent to local worker · Waiting for first response text…',true);let recent=history.slice(-4).map(m=>({role:m.role,content:m.content.slice(0,1000)}));worker.postMessage({type:'generate',id:job.id,messages:[{role:'system',content:'You are '+currentModel().name+', a helpful school-safe study assistant. Be concise. Include answer keys for practice quizzes. Refuse instructions for self-harm, violence or dangerous wrongdoing and offer safe alternatives. Do not claim to search the web or use unavailable tools.'},...recent,{role:'user',content:text}]})}
+$('send').onclick=send;$('input').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}};document.querySelectorAll('[data-text]').forEach(b=>b.onclick=()=>{$('input').value=b.dataset.text;send()});
+setInterval(()=>{let now=Date.now();if(loading||job){let seconds=Math.floor((now-phaseStart)/1000);let extra=job&&job.text?' · '+job.text.length+' characters received · '+Math.floor((now-job.last)/1000)+'s since last text':'';$('activityText').textContent=phase+' · '+seconds+'s'+extra}if(job){let total=now-job.start,idle=now-job.last;if(total>240000||(!job.text&&total>90000)||(job.text&&idle>45000)){endJob('Generation stalled or exceeded the time limit. The model was reset. Reload it and try a shorter message.',true)}}if(loading&&now-phaseStart>180000){fail('No loading progress for 3 minutes. Loading was stopped; check your connection and try again.')}},1000);
+$('new').onclick=()=>{if(job||loading)return;history=[];$('messages').replaceChildren();$('welcome').hidden=false;activity(ready?'New chat · Local model ready':'New chat · Load your local model')};
+$('qwen').onclick=()=>toast('Qwen ASR browser adapter is not implemented. It is not secretly loaded.');
+$('mic').onclick=()=>{if(listening){rec.stop();return}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR||!('processLocally' in SR.prototype)){toast('Verified on-device speech recognition is unavailable here. No cloud speech fallback is used.');return}try{rec=new SR();rec.processLocally=true;rec.lang='en-AU';rec.interimResults=true;rec.onstart=()=>{listening=true;$('mic').classList.add('active');if(!job&&!loading)activity('Listening on-device · Tap mic to stop',true)};rec.onresult=e=>{$('input').value=Array.from(e.results).map(r=>r[0].transcript).join(' ')};rec.onerror=e=>toast('Local microphone: '+e.error);rec.onend=()=>{listening=false;$('mic').classList.remove('active');if(!job&&!loading)activity('Microphone stopped. Review your text before sending.')};rec.start()}catch(e){toast(e.message)}};
+$('voice').onclick=()=>toast('Fully local voice conversation is not implemented yet. Chat and text-file tools are available.');
+function renderFiles(){$('files').replaceChildren();files.forEach((f,i)=>{let c=document.createElement('div');c.className='card';let name=document.createElement('div');name.textContent=f.name;let edit=document.createElement('button');edit.textContent='Edit';edit.onclick=()=>{editing=i;$('fileTitle').textContent=f.name;$('editor').value=f.text;$('fileDialog').showModal();log('Opened local workspace editor: '+f.name)};let d=document.createElement('button');d.textContent='Download';d.onclick=()=>{save(f.name,f.text);log('Requested download: '+f.name)};c.append(name,edit,d);$('files').append(c)})}
+$('create').onclick=()=>{let name=prompt('File name','notes.txt');if(name){files.push({name:name.replace(/[\\/]/g,'_'),text:''});renderFiles();log('Created local workspace file: '+name)}};$('upload').onclick=$('upload2').onclick=()=>$('fileInput').click();$('fileInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(f.size>2000000)throw Error('Choose a text file under 2 MB.');log('Reading local file: '+f.name);files.push({name:f.name,text:await f.text()});renderFiles();menu(true);log('File added locally; not sent to the model.')}catch(err){toast(err.message)}e.target.value=''};$('saveFile').onclick=()=>{if(editing>=0){files[editing].text=$('editor').value;renderFiles();log('Saved workspace copy: '+files[editing].name)}$('fileDialog').close();toast('Download the file to keep your changes.')};$('cancelFile').onclick=()=>$('fileDialog').close();$('logoDownload').onclick=()=>save('max-ai-logo.svg',LOGO,'image/svg+xml');
+window.addEventListener('error',e=>{toast('Page error: '+e.message);log('Page error: '+e.message)});window.addEventListener('unhandledrejection',e=>{toast(String(e.reason?.message||e.reason));log('Unhandled error: '+String(e.reason?.message||e.reason))});
 
-  function setActivity(text, working) {
-    $("activityText").textContent = text;
-    document.body.classList.toggle("working", !!working);
-  }
+REGISTRY.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=m.name+' — '+m.size;$('modelSelect').append(o)});
+$('modelSelect').value=selectedModel;
+function updateSelection(){$('modelInfo').textContent=currentModel().name+' · underlying model: '+currentModel().model+'. Version names are Max AI labels, not capability rankings.';$('welcome').querySelector('h1').textContent='Meet '+currentModel().name;}
+$('modelSelect').onchange=async()=>{if(job||loading||switching)return;switching=true;const next=Number($('modelSelect').value);terminate();controls();activity('Unloading previous model before switching…',true);try{await disposal;selectedModel=next;history=[];$('messages').replaceChildren();$('welcome').hidden=false;updateSelection();activity('Selected '+currentModel().name+' · Press Load local model.');}catch(e){toast('Could not release model: '+e.message)}finally{switching=false;controls()}};
+updateSelection();
 
-  function showToast(text) {
-    const toast = $("toast");
-    toast.textContent = text;
-    toast.hidden = false;
-    setTimeout(() => { toast.hidden = true; }, 4000);
-  }
-
-  function openMenu(open) {
-    $("sidebar").hidden = !open;
-    $("shade").hidden = !open;
-  }
-
-  function addMessage(role, text) {
-    $("welcome").hidden = true;
-    const div = document.createElement("div");
-    div.className = "message " + role;
-    div.textContent = text;
-    $("messages").appendChild(div);
-    $("chat").scrollTop = $("chat").scrollHeight;
-    return div;
-  }
-
-  async function sendToServer(text) {
-    if (!server) {
-      // No server configured: demo reply only
-      await new Promise(r => setTimeout(r, 400));
-      return "Demo reply (no server configured yet):
-
-" + text;
-    }
-
-    const url = server.replace(//+$/,"") + "/v1/chat/completions";
-    const body = {
-      messages: [
-        {
-          role: "system",
-          content: "You are MAX 0.4 Astra, a school-safe, self-trained assistant. Explain clearly, keep answers concise, include answer keys for practice quizzes, and refuse instructions for self-harm, violence, or dangerous wrongdoing."
-        },
-        ...history,
-        { role: "user", content: text }
-      ],
-      stream: false
-    };
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-
-    if (!response.ok) {
-      throw new Error("Server error " + response.status);
-    }
-
-    const json = await response.json();
-    // OpenAI/llama-server style: choices[0].message.content[web:54][web:66]
-    const content = json.choices && json.choices[0] && json.choices[0].message && json.choices[0].message.content;
-    if (typeof content !== "string") {
-      throw new Error("Unexpected response format from server.");
-    }
-    return content;
-  }
-
-  async function send() {
-    if (busy) return;
-    const text = $("input").value.trim();
-    if (!text) return;
-
-    $("input").value = "";
-    busy = true;
-    setActivity("Sending to Astra 0.4…", true);
-
-    addMessage("user", text);
-    const replyDiv = addMessage("assistant", "Thinking with your local model…");
-
-    try {
-      const answer = await sendToServer(text);
-      replyDiv.textContent = answer;
-      history.push({ role: "user", content: text }, { role: "assistant", content: answer });
-      setActivity(server ? "Reply from local server." : "Demo reply (configure server in ☰).", false);
-    } catch (err) {
-      replyDiv.textContent = "Error contacting local server: " + err.message;
-      setActivity("Local server error · Check that llama-server is running.", false);
-      showToast(err.message);
-    } finally {
-      busy = false;
-    }
-  }
-
-  $("send").addEventListener("click", send);
-  $("input").addEventListener("keydown", e => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      send();
-    }
-  });
-
-  document.querySelectorAll(".suggest").forEach(btn => {
-    btn.addEventListener("click", () => {
-      $("input").value = btn.dataset.text || "";
-      send();
-    });
-  });
-
-  $("menu").addEventListener("click", () => openMenu(true));
-  $("close").addEventListener("click", () => openMenu(false));
-  $("shade").addEventListener("click", () => openMenu(false));
-
-  $("new").addEventListener("click", () => {
-    if (busy) return;
-    $("messages").textContent = "";
-    $("welcome").hidden = false;
-    history = [];
-    setActivity(server ? "New chat · Local server saved." : "New chat · No server saved yet.", false);
-  });
-
-  $("saveServer").addEventListener("click", () => {
-    const value = $("serverUrl").value.trim();
-    if (!value) {
-      server = "";
-      $("serverState").textContent = "No server saved.";
-      try { localStorage.removeItem("max_ai_server"); } catch {}
-      setActivity("Interface ready · No server saved.", false);
-      return;
-    }
-    server = value;
-    $("serverState").textContent = "Saved server: " + server;
-    try { localStorage.setItem("max_ai_server", server); } catch {}
-    setActivity("Interface ready · Server saved. Make sure llama-server is running.", false);
-    showToast("Server URL saved locally.");
-  });
-
-  // Workspace files
-  function renderFiles() {
-    const list = $("files");
-    list.textContent = "";
-    files.forEach((f, i) => {
-      const card = document.createElement("div");
-      card.className = "card";
-      const name = document.createElement("div");
-      name.textContent = f.name;
-      const edit = document.createElement("button");
-      edit.textContent = "Edit";
-      edit.addEventListener("click", () => {
-        editingIndex = i;
-        $("fileTitle").textContent = f.name;
-        $("editor").value = f.text;
-        $("fileDialog").showModal();
-      });
-      const download = document.createElement("button");
-      download.textContent = "Download";
-      download.addEventListener("click", () => {
-        const url = URL.createObjectURL(new Blob([f.text], { type: "text/plain" }));
-        const a = document.createElement("a");
-        a.href = url; a.download = f.name;
-        document.body.appendChild(a);
-        a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 2000);
-      });
-      card.append(name, edit, download);
-      list.appendChild(card);
-    });
-  }
-
-  $("create").addEventListener("click", () => {
-    const name = prompt("File name", "notes.txt");
-    if (name) {
-      files.push({ name: name.replace(/[\\/]/g, "_"), text: "" });
-      renderFiles();
-    }
-  });
-
-  $("upload").addEventListener("click", () => $("fileInput").click());
-  $("upload2").addEventListener("click", () => $("fileInput").click());
-  $("fileInput").addEventListener("change", async e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    try {
-      if (file.size > 2000000) throw new Error("Choose a text file under 2 MB.");
-      files.push({ name: file.name, text: await file.text() });
-      renderFiles();
-      openMenu(true);
-      showToast("File added to local workspace (not sent to any model).");
-    } catch (err) {
-      showToast(err.message);
-    }
-    e.target.value = "";
-  });
-
-  $("saveFile").addEventListener("click", () => {
-    if (editingIndex >= 0) {
-      files[editingIndex].text = $("editor").value;
-      renderFiles();
-    }
-    $("fileDialog").close();
-    showToast("Workspace file updated. Download it to keep changes.");
-  });
-
-  $("cancelFile").addEventListener("click", () => $("fileDialog").close());
-
-  $("logoDownload").addEventListener("click", () => {
-    const svg = document.querySelector("#welcome svg");
-    if (!svg) {
-      showToast("Logo not found in welcome card.");
-      return;
-    }
-    const source = svg.outerHTML;
-    const url = URL.createObjectURL(new Blob([source], { type: "image/svg+xml" }));
-    const a = document.createElement("a");
-    a.href = url; a.download = "max-ai-logo.svg";
-    document.body.appendChild(a);
-    a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
-  });
-
-  // Mic / voice placeholders
-  $("mic").addEventListener("click", () => {
-    showToast("Mic button pressed. Voice-to-text wiring can be added after chat works.");
-  });
-  $("voice").addEventListener("click", () => {
-    showToast("Voice conversation is not implemented yet. Chat uses your local server.");
-  });
-  $("stop").addEventListener("click", () => {
-    showToast("Stop pressed. This simple version does not stream partial tokens yet.");
-  });
-
-  setActivity(server ? "Interface ready · Server saved, configure llama-server." : "Interface ready · No server saved.", false);
+document.querySelectorAll('.logo').forEach(e=>e.innerHTML=LOGO);$('diagnostics').textContent='WebGPU '+(navigator.gpu?'exposed':'unavailable')+' · '+(isSecureContext?'Secure context':'Not a secure context');controls();activity(phase);
 })();
-</script>
-</body>
-</html> 
+</script></body></html>
