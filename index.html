@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Max AI – Astra 0.4</title>
+<meta name="application-name" content="Max AI">
+<meta name="description" content="Max AI – Astra 0.4: a school-safe study buddy that runs entirely in your browser.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 200'%3E%3Cpath d='M48 115V66Q48 44 65 60L110 105L155 60Q172 44 172 66V115' fill='none' stroke='%237a5af0' stroke-width='18' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Shared gradient for the logo (kept outside any hidden element so it always renders) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs><linearGradient id="maxg"><stop stop-color="#a855f7"/><stop offset="1" stop-color="#267aff"/></linearGradient></defs>
+</svg>
+
+<div id="app">
+  <header>
+    <button id="menu" aria-label="Open menu">☰</button>
+    <div class="brand">
+      <span class="logo">
+        <svg viewBox="0 0 220 200" role="img" aria-label="Max AI"><g class="m-mark"><path d="M48 115V66Q48 44 65 60L110 105L155 60Q172 44 172 66V115" fill="none" stroke="url(#maxg)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><path d="M110 22L115 35L128 40L115 45L110 58L105 45L92 40L105 35Z" fill="#9955ee"/></g><text x="110" y="170" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" letter-spacing="5" font-size="24" fill="#202332">MAX AI</text></svg>
+      </span>
+      Max AI – Astra 0.4
+    </div>
+    <button id="new" aria-label="New chat">＋</button>
+  </header>
+
+  <main id="chat">
+    <section id="welcome">
+      <div class="logo">
+        <svg viewBox="0 0 220 200" role="img" aria-label="Max AI"><g class="m-mark"><path d="M48 115V66Q48 44 65 60L110 105L155 60Q172 44 172 66V115" fill="none" stroke="url(#maxg)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><path d="M110 22L115 35L128 40L115 45L110 58L105 45L92 40L105 35Z" fill="#9955ee"/></g><text x="110" y="170" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" letter-spacing="5" font-size="24" fill="#202332">MAX AI</text></svg>
+      </div>
+      <h1>Meet Max AI – Astra 0.4</h1>
+      <p class="muted">Your school-safe study buddy. Astra runs privately inside your browser, so your messages never leave this device.</p>
+      <button class="suggest" data-text="Explain photosynthesis in three sentences.">✧ &nbsp; Explain something simply</button>
+      <button class="suggest" data-text="Make a short photosynthesis quiz with an answer key.">✧ &nbsp; Make a study quiz</button>
+      <button class="suggest" data-text="Help me plan a simple website.">✧ &nbsp; Help me create a website</button>
+    </section>
+    <div id="messages" aria-live="polite"></div>
+  </main>
+
+  <footer>
+    <div class="activity" role="status">
+      <span class="logo">
+        <svg viewBox="0 0 220 200" role="img" aria-label="Max AI"><g class="m-mark"><path d="M48 115V66Q48 44 65 60L110 105L155 60Q172 44 172 66V115" fill="none" stroke="url(#maxg)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><path d="M110 22L115 35L128 40L115 45L110 58L105 45L92 40L105 35Z" fill="#9955ee"/></g><text x="110" y="170" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" letter-spacing="5" font-size="24" fill="#202332">MAX AI</text></svg>
+      </span>
+      <span id="activityText">Interface ready</span>
+    </div>
+    <div class="composer">
+      <button id="upload" aria-label="Upload text">＋</button>
+      <textarea id="input" aria-label="Message" placeholder="Message Max AI…"></textarea>
+      <button id="mic" aria-label="Local voice to text">🎙</button>
+      <button id="voice" aria-label="Voice conversation">☎</button>
+      <button id="stop" hidden>■ Stop</button>
+      <button id="send" aria-label="Send">➤</button>
+    </div>
+  </footer>
+</div>
+
+<div id="shade" hidden></div>
+
+<aside id="sidebar" hidden>
+  <button id="close" style="float:right" aria-label="Close menu">×</button>
+  <h2>Max AI</h2>
+
+  <div class="card">
+    <b>Max AI – Astra 0.4</b>
+    <p class="muted">Powered by your local GGUF model:<br><span class="file-name">Max_AI_0.4_Astra-Q4_K_M.gguf</span></p>
+    <p><span id="modelStatus" class="pill" data-state="not-loaded">Model not loaded</span></p>
+    <progress id="modelProgress" max="100" value="0" hidden></progress>
+    <p class="muted" id="modelState">The first load downloads the model from this site. Your browser should keep a copy, so later loads are faster.</p>
+    <button id="load">Load model</button>
+    <button id="unload">Unload / reset</button>
+  </div>
+
+  <div class="card safety">
+    <b>Safety</b>
+    <p class="muted">Astra is a school-safe assistant. It is trained and instructed to refuse harmful or illegal requests, such as violence, self-harm instructions or dangerous wrongdoing, and to suggest safe alternatives. If a chat ever feels wrong or upsetting, stop and talk to a trusted adult.</p>
+  </div>
+
+  <h3>Files</h3>
+  <button id="create">New file</button>
+  <button id="upload2">Upload text</button>
+  <div id="files"></div>
+
+  <h3>Logo</h3>
+  <button id="logoDownload">Download SVG</button>
+
+  <h3>Recent activity</h3>
+  <div id="eventLog"></div>
+
+  <h3>Privacy &amp; limitations</h3>
+  <p class="muted">This site does not call Hugging Face or any external AI API. The engine and the model are loaded from this website only, and every reply is generated inside your browser. Web search is off. Workspace files clear when the page reloads.</p>
+  <p class="muted">Local models are not guaranteed safe; safety instructions are not unbypassable controls. Voice is limited to browsers that offer on-device speech recognition; a fully local voice conversation is not implemented.</p>
+  <p id="diagnostics" class="muted"></p>
+</aside>
+
+<input id="fileInput" type="file" accept=".txt,.md,.html,.css,.js,.json,.csv" hidden>
+<dialog id="fileDialog">
+  <h3 id="fileTitle"></h3>
+  <textarea id="editor" aria-label="File contents"></textarea>
+  <button id="saveFile">Save workspace copy</button>
+  <button id="cancelFile">Cancel</button>
+</dialog>
+<div id="toast" role="status" hidden></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
